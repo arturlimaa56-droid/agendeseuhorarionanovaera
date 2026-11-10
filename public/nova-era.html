@@ -154,17 +154,24 @@ function initFb(){
 (async function(){
   try{
     if(FB_CONFIG.apiKey&&window.firebase){initFb();return}
-    if(!window.claude||!claude.use)return;
-    var db=await claude.use("db");
-    if(!db)return;
-    dbRef=db.collection("bookings");
-    siteRef=db.doc("site/content");photoRef=db.collection("sitephotos");
-    siteRef.onSnapshot(function(s){siteMeta=s.exists?s.data():null;applySite()},function(){});
-    photoRef.onSnapshot(function(s){var m={};s.docs.forEach(function(d){var v=d.data();if(v&&v.b&&okImg(v.u))(m[v.b]=m[v.b]||[])[v.i]=v.u});sitePh=m;applySite()},function(){});
-    dbRef.onSnapshot(function(s){
-      dbBookings=s.docs.map(function(d){return d.data()}).filter(Boolean);
-      renderSlots();if(!$("list").classList.contains("hide"))renderAdmin();
-    },function(){});
+    var SD="/api/public/site-data",ver="",fullList=[];
+    function post(o){return fetch(SD,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(o)}).then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.error||"erro");return j.data})})}
+    function tk(){return ME&&ME.token||""}
+    siteRef={set:function(m){return post({action:"setSite",token:tk(),meta:m}).then(poll)}};
+    photoRef={doc:function(k){return {set:function(v){return post({action:"setPhoto",token:tk(),key:k,v:v})},delete:function(){return post({action:"delPhoto",token:tk(),key:k})}}}};
+    dbRef={doc:function(id){return {set:function(b){return post({action:"book",booking:b}).then(poll)},delete:function(){return post({action:"cancel",token:tk(),id:id})}}}};
+    async function poll(){
+      try{
+        var r=await (await fetch(SD+"?since="+encodeURIComponent(ver))).json();
+        if(r.photos){var m={};r.photos.forEach(function(v){if(v&&v.b&&okImg(v.u))(m[v.b]=m[v.b]||[])[v.i]=v.u});sitePh=m;ver=r.ver}
+        siteMeta=r.site;applySite();
+        if(tk()){try{fullList=await post({action:"list",token:tk()})||[]}catch(e){fullList=[]}}else fullList=[];
+        var mm={};(r.busy||[]).concat(fullList).forEach(function(b){mm[b.id]=b});
+        dbBookings=Object.keys(mm).map(function(k){return mm[k]});
+        renderSlots();if(!$("list").classList.contains("hide"))renderAdmin();
+      }catch(e){}
+    }
+    window.nePoll=poll;poll();setInterval(poll,15000);
   }catch(e){}
 })();
 
@@ -290,7 +297,7 @@ $("pinGo").onclick=async function(){
     if(unsubFull)unsubFull();
     unsubFull=fs.collection("bookings").onSnapshot(function(s){fullDocs=s.docs.map(function(d){return d.data()}).filter(Boolean);mergeDb()},function(){});
   }
-  ME=acc;$("pinErr").classList.add("hide");UNL=true;$("pinBox").classList.add("hide");$("admTabs").classList.remove("hide");$("list").classList.remove("hide");renderAdmin();renderAccMgr();
+  ME=acc;$("pinErr").classList.add("hide");UNL=true;$("pinBox").classList.add("hide");$("admTabs").classList.remove("hide");$("list").classList.remove("hide");renderAdmin();renderAccMgr();if(window.nePoll)window.nePoll();
 };
 
 /* ---------- vitrine e painel de edição ---------- */

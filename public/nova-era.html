@@ -115,12 +115,11 @@ try{var LS=localStorage.getItem("novaera_site");if(LS)DATA=JSON.parse(LS)}catch(
 document.getElementById("mount").appendChild(document.getElementById("tpl").content.cloneNode(true));
 var BARBERS=[{id:"b1",name:"Biel",cls:"t1",wa:"5586999981178"},{id:"b2",name:"Nicolas",cls:"t2",wa:"5586999981178"}]; // wa = WhatsApp de cada barbeiro (55 + DDD + número)
 var SERVICES=[{id:"corte",name:"Corte",min:30},{id:"barba",name:"Barba",min:15},{id:"combo",name:"Corte + Barba",min:45}];
-var ACCOUNTS0=[{name:"Arthur Lima",pin:"1389",b:null,master:true,email:"nicolas@novaera-barbearia.app",ap:"1389"},{name:"Nicolas Lima",pin:"1389",b:"b2",email:"nicolas@novaera-barbearia.app",ap:"1389"},{name:"Biel",pin:"1010",b:"b1",email:"biel@novaera-barbearia.app",ap:"1010"}];
-var ACCOUNTS=(function(){try{var o=JSON.parse(localStorage.getItem("ne_accounts")||"null");if(o&&o.length){ACCOUNTS0.forEach(function(a){if(a.master&&!o.some(function(x){return x.master}))o.unshift(a)});return o}}catch(e){}return ACCOUNTS0.slice()})();
-function saveAcc(){localStorage.setItem("ne_accounts",JSON.stringify(ACCOUNTS))}
-function renderAccMgr(){var w=$("accMgr");if(!w)return;if(!ME||!ME.master){w.classList.add("hide");return}w.classList.remove("hide");var h='<h2 style="margin-top:14px">Gerenciar acessos</h2>';ACCOUNTS.forEach(function(a,i){h+='<div class="row"><span class="c">'+esc(a.name)+(a.master?' <small>(administrador)</small>':'')+'</span><button class="ghost" data-pw="'+i+'">Mudar senha</button>'+(a.master?'':'<button class="x" data-del="'+i+'">Excluir</button>')+'</div>'});w.innerHTML=h;
-Array.prototype.forEach.call(w.querySelectorAll("[data-pw]"),function(b){b.onclick=function(){var a=ACCOUNTS[+b.getAttribute("data-pw")],n=prompt("Nova senha para "+a.name+":");if(n&&n.trim()){a.pin=n.trim();saveAcc();alert("Senha alterada.")}}});
-Array.prototype.forEach.call(w.querySelectorAll("[data-del]"),function(b){b.onclick=function(){var i=+b.getAttribute("data-del");if(confirm("Excluir o acesso de "+ACCOUNTS[i].name+"?")){ACCOUNTS.splice(i,1);saveAcc();renderAccMgr()}}})}
+function api(o){return fetch("/api/public/barber-accounts",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(o)}).then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.error||"erro");return j.data})})}
+async function renderAccMgr(){var w=$("accMgr");if(!w)return;if(!ME||!ME.master){w.classList.add("hide");return}w.classList.remove("hide");var list;try{list=await api({action:"list",token:ME.token})}catch(e){w.innerHTML='<p class="note">Não foi possível carregar os acessos.</p>';return}
+var h='<h2 style="margin-top:14px">Gerenciar acessos</h2>';list.forEach(function(a,i){h+='<div class="row"><span class="c">'+esc(a.name)+(a.master?' <small>(administrador)</small>':'')+'</span><button class="ghost" data-pw="'+i+'">Mudar senha</button>'+(a.master?'':'<button class="x" data-del="'+i+'">Excluir</button>')+'</div>'});w.innerHTML=h;
+Array.prototype.forEach.call(w.querySelectorAll("[data-pw]"),function(b){b.onclick=async function(){var a=list[+b.getAttribute("data-pw")],n=prompt("Nova senha para "+a.name+" (mínimo 4 caracteres):");if(!n||!n.trim())return;if(n.trim().length<4){alert("A senha precisa ter pelo menos 4 caracteres.");return}try{await api({action:"setPin",token:ME.token,id:a.id,pin:n.trim()});alert("Senha alterada.")}catch(e){alert("Não foi possível alterar a senha.")}}});
+Array.prototype.forEach.call(w.querySelectorAll("[data-del]"),function(b){b.onclick=async function(){var a=list[+b.getAttribute("data-del")];if(!confirm("Excluir o acesso de "+a.name+"?"))return;try{await api({action:"delete",token:ME.token,id:a.id});renderAccMgr()}catch(e){alert("Não foi possível excluir.")}}})}
 // acessos da área do barbeiro
 var ME=null;
 var IG={b1:"https://www.instagram.com/bielducorte7?rpxt=MWlycGl2cXBzY2o2bw==",b2:"https://www.instagram.com/nicolasbarbeiro_11?mdxt=MW03YXQxdHZia255YQ=="};
@@ -279,11 +278,13 @@ function renderAdmin(){
 $("adminBtn").onclick=function(){$("booking").classList.add("hide");$("done").classList.add("hide");$("admin").classList.remove("hide");$("adminBtn").classList.add("hide")};
 $("back").onclick=function(){if(fbAuth){if(unsubFull){unsubFull();unsubFull=null}fullDocs=[];fbAuth.signOut();mergeDb()}$("pinErr").classList.add("hide");$("admin").classList.add("hide");$("adminBtn").classList.remove("hide");$("booking").classList.remove("hide");$("pin").value="";$("uname").value="";ME=null;$("pinBox").classList.remove("hide");$("list").classList.add("hide");UNL=false;$("admTabs").classList.add("hide");$("edWrap").classList.add("hide");if($("accMgr"))$("accMgr").classList.add("hide");renderAll()};
 $("pinGo").onclick=async function(){
-  var un=$("uname").value.trim().toLowerCase(),acc=ACCOUNTS.filter(function(a){return a.name.toLowerCase()===un&&a.pin===$("pin").value})[0];
+  var acc=null;$("pinGo").disabled=true;
+  try{acc=await api({action:"login",name:$("uname").value.trim(),pin:$("pin").value})}catch(e){acc=null}
+  $("pinGo").disabled=false;
   if(!acc){$("pinErr").textContent="Nome ou senha incorretos.";$("pinErr").classList.remove("hide");return}
   if(fbAuth){
     $("pinGo").disabled=true;
-    try{await fbAuth.signInWithEmailAndPassword(acc.email,(acc.ap||acc.pin)+"-novaera")}
+    try{await fbAuth.signInWithEmailAndPassword(acc.email,acc.fbPass)}
     catch(e){$("pinGo").disabled=false;$("pinErr").textContent="Não foi possível entrar agora. Confira a internet e tente de novo.";$("pinErr").classList.remove("hide");return}
     $("pinGo").disabled=false;
     if(unsubFull)unsubFull();

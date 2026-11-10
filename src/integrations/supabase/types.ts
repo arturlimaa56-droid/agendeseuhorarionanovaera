@@ -14,13 +14,78 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      barber_accounts: {
+        Row: {
+          barber_id: string | null
+          created_at: string
+          fb_email: string | null
+          fb_pass: string | null
+          id: string
+          is_master: boolean
+          name: string
+          pin_hash: string
+        }
+        Insert: {
+          barber_id?: string | null
+          created_at?: string
+          fb_email?: string | null
+          fb_pass?: string | null
+          id?: string
+          is_master?: boolean
+          name: string
+          pin_hash: string
+        }
+        Update: {
+          barber_id?: string | null
+          created_at?: string
+          fb_email?: string | null
+          fb_pass?: string | null
+          id?: string
+          is_master?: boolean
+          name?: string
+          pin_hash?: string
+        }
+        Relationships: []
+      }
+      barber_sessions: {
+        Row: {
+          account_id: string
+          expires_at: string
+          token: string
+        }
+        Insert: {
+          account_id: string
+          expires_at?: string
+          token: string
+        }
+        Update: {
+          account_id?: string
+          expires_at?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "barber_sessions_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "barber_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      ne_delete: { Args: { _id: string; _token: string }; Returns: undefined }
+      ne_list: { Args: { _token: string }; Returns: Json }
+      ne_login: { Args: { _name: string; _pin: string }; Returns: Json }
+      ne_master: { Args: { _token: string }; Returns: boolean }
+      ne_set_pin: {
+        Args: { _id: string; _pin: string; _token: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

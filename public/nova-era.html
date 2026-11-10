@@ -91,7 +91,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:linear-grad
 
   <section class="done hide" id="done"></section>
 
-  <section class="hide" id="admin">
+  <section class="hide" id="admin"><div id="accMgr" class="hide"></div>
     <h2>Agenda da barbearia</h2>
     <div id="pinBox">
       <label for="uname">Nome</label><input id="uname" autocomplete="username" placeholder="Seu nome">
@@ -115,7 +115,13 @@ try{var LS=localStorage.getItem("novaera_site");if(LS)DATA=JSON.parse(LS)}catch(
 document.getElementById("mount").appendChild(document.getElementById("tpl").content.cloneNode(true));
 var BARBERS=[{id:"b1",name:"Biel",cls:"t1",wa:"5586999981178"},{id:"b2",name:"Nicolas",cls:"t2",wa:"5586999981178"}]; // wa = WhatsApp de cada barbeiro (55 + DDD + número)
 var SERVICES=[{id:"corte",name:"Corte",min:30},{id:"barba",name:"Barba",min:15},{id:"combo",name:"Corte + Barba",min:45}];
-var ACCOUNTS=[{name:"Nicolas Lima",pin:"1389",b:"b2",email:"nicolas@novaera-barbearia.app"},{name:"Biel",pin:"1010",b:"b1",email:"biel@novaera-barbearia.app"}]; // acessos da área do barbeiro
+var ACCOUNTS0=[{name:"Arthur Lima",pin:"1389",b:null,master:true,email:"nicolas@novaera-barbearia.app",ap:"1389"},{name:"Nicolas Lima",pin:"1389",b:"b2",email:"nicolas@novaera-barbearia.app",ap:"1389"},{name:"Biel",pin:"1010",b:"b1",email:"biel@novaera-barbearia.app",ap:"1010"}];
+var ACCOUNTS=(function(){try{var o=JSON.parse(localStorage.getItem("ne_accounts")||"null");if(o&&o.length){ACCOUNTS0.forEach(function(a){if(a.master&&!o.some(function(x){return x.master}))o.unshift(a)});return o}}catch(e){}return ACCOUNTS0.slice()})();
+function saveAcc(){localStorage.setItem("ne_accounts",JSON.stringify(ACCOUNTS))}
+function renderAccMgr(){var w=$("accMgr");if(!w)return;if(!ME||!ME.master){w.classList.add("hide");return}w.classList.remove("hide");var h='<h2 style="margin-top:14px">Gerenciar acessos</h2>';ACCOUNTS.forEach(function(a,i){h+='<div class="row"><span class="c">'+esc(a.name)+(a.master?' <small>(administrador)</small>':'')+'</span><button class="ghost" data-pw="'+i+'">Mudar senha</button>'+(a.master?'':'<button class="x" data-del="'+i+'">Excluir</button>')+'</div>'});w.innerHTML=h;
+Array.prototype.forEach.call(w.querySelectorAll("[data-pw]"),function(b){b.onclick=function(){var a=ACCOUNTS[+b.getAttribute("data-pw")],n=prompt("Nova senha para "+a.name+":");if(n&&n.trim()){a.pin=n.trim();saveAcc();alert("Senha alterada.")}}});
+Array.prototype.forEach.call(w.querySelectorAll("[data-del]"),function(b){b.onclick=function(){var i=+b.getAttribute("data-del");if(confirm("Excluir o acesso de "+ACCOUNTS[i].name+"?")){ACCOUNTS.splice(i,1);saveAcc();renderAccMgr()}}})}
+// acessos da área do barbeiro
 var ME=null;
 var IG={b1:"https://www.instagram.com/bielducorte7?rpxt=MWlycGl2cXBzY2o2bw==",b2:"https://www.instagram.com/nicolasbarbeiro_11?mdxt=MW03YXQxdHZia255YQ=="};
 var WHATSAPP="5586999981178";
@@ -259,7 +265,7 @@ function showDone(b){
 /* ---------- área da barbearia ---------- */
 function renderAdmin(){
   var l=$("list"),arr=all().sort(function(a,b){return (a.date+a.time).localeCompare(b.date+b.time)});
-  var today=iso(new Date());arr=arr.filter(function(b){return b.date>=today&&(!ME||b.barber===ME.b)&&b.name});
+  var today=iso(new Date());arr=arr.filter(function(b){return b.date>=today&&(!ME||!ME.b||b.barber===ME.b)&&b.name});
   if(!arr.length){l.innerHTML='<p class="note">Nenhum agendamento por vir.</p>';return}
   var h="",last="";
   arr.forEach(function(b){
@@ -271,19 +277,19 @@ function renderAdmin(){
   Array.prototype.forEach.call(l.querySelectorAll(".x"),function(x){x.onclick=function(){var id=x.getAttribute("data-id"),b=all().filter(function(q){return q.id===id})[0];if(!b||!confirm("Cancelar este horário e avisar o cliente pelo WhatsApp?"))return;var n=String(b.phone).replace(/\D/g,"").replace(/^0+/,"");if(n.length<=11)n="55"+n;var m="Olá, "+b.name+"! Aqui é da Nova Era Barbearia. Precisamos cancelar seu horário de "+b.service+" com "+b.barberName+" ("+fmtDate(b.date)+" às "+b.time+"). Podemos combinar outro horário? Me diga qual dia e hora ficam melhores para você.";window.open("https://wa.me/"+n+"?text="+encodeURIComponent(m),"_blank");removeBooking(id)}});
 }
 $("adminBtn").onclick=function(){$("booking").classList.add("hide");$("done").classList.add("hide");$("admin").classList.remove("hide");$("adminBtn").classList.add("hide")};
-$("back").onclick=function(){if(fbAuth){if(unsubFull){unsubFull();unsubFull=null}fullDocs=[];fbAuth.signOut();mergeDb()}$("pinErr").classList.add("hide");$("admin").classList.add("hide");$("adminBtn").classList.remove("hide");$("booking").classList.remove("hide");$("pin").value="";$("uname").value="";ME=null;$("pinBox").classList.remove("hide");$("list").classList.add("hide");UNL=false;$("admTabs").classList.add("hide");$("edWrap").classList.add("hide");renderAll()};
+$("back").onclick=function(){if(fbAuth){if(unsubFull){unsubFull();unsubFull=null}fullDocs=[];fbAuth.signOut();mergeDb()}$("pinErr").classList.add("hide");$("admin").classList.add("hide");$("adminBtn").classList.remove("hide");$("booking").classList.remove("hide");$("pin").value="";$("uname").value="";ME=null;$("pinBox").classList.remove("hide");$("list").classList.add("hide");UNL=false;$("admTabs").classList.add("hide");$("edWrap").classList.add("hide");if($("accMgr"))$("accMgr").classList.add("hide");renderAll()};
 $("pinGo").onclick=async function(){
   var un=$("uname").value.trim().toLowerCase(),acc=ACCOUNTS.filter(function(a){return a.name.toLowerCase()===un&&a.pin===$("pin").value})[0];
   if(!acc){$("pinErr").textContent="Nome ou senha incorretos.";$("pinErr").classList.remove("hide");return}
   if(fbAuth){
     $("pinGo").disabled=true;
-    try{await fbAuth.signInWithEmailAndPassword(acc.email,acc.pin+"-novaera")}
+    try{await fbAuth.signInWithEmailAndPassword(acc.email,(acc.ap||acc.pin)+"-novaera")}
     catch(e){$("pinGo").disabled=false;$("pinErr").textContent="Não foi possível entrar agora. Confira a internet e tente de novo.";$("pinErr").classList.remove("hide");return}
     $("pinGo").disabled=false;
     if(unsubFull)unsubFull();
     unsubFull=fs.collection("bookings").onSnapshot(function(s){fullDocs=s.docs.map(function(d){return d.data()}).filter(Boolean);mergeDb()},function(){});
   }
-  ME=acc;$("pinErr").classList.add("hide");UNL=true;$("pinBox").classList.add("hide");$("admTabs").classList.remove("hide");$("list").classList.remove("hide");renderAdmin();
+  ME=acc;$("pinErr").classList.add("hide");UNL=true;$("pinBox").classList.add("hide");$("admTabs").classList.remove("hide");$("list").classList.remove("hide");renderAdmin();renderAccMgr();
 };
 
 /* ---------- vitrine e painel de edição ---------- */
@@ -323,7 +329,7 @@ function renderEditor(){
   var h='<p class="note">O que você salvar aqui aparece para todos os clientes. Você está editando o perfil de '+esc(ME?ME.name:"")+'.</p>';
   BARBERS.forEach(function(b,i){
     var d=ED.barbers[b.id]=ED.barbers[b.id]||{photos:[]};
-    if(ME&&b.id!==ME.b)return;
+    if(ME&&ME.b&&b.id!==ME.b)return;
     h+='<div class="sub'+(i?" r":"")+'"><b>'+esc(b.name)+'</b>'+
     '<label>WhatsApp (com DDD)</label><input data-f="wa" data-b="'+b.id+'" inputmode="tel" value="'+attr(d.wa||"")+'">'+
     '<label>Link do Instagram</label><input data-f="ig" data-b="'+b.id+'" placeholder="https://instagram.com/..." value="'+attr(d.ig||"")+'">'+

@@ -190,7 +190,7 @@ async function saveBooking(b){
     }catch(e){return false}
   }
   if(dbRef){
-    try{await dbRef.doc(b.id).set(b);dbNote="shared";return true}catch(e){}
+    try{await dbRef.doc(b.id).set(b);dbNote="shared";return true}catch(e){return false}
   }
   localBookings.push(b);saveLocal();dbNote="local";return true;
 }

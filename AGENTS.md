@@ -28,3 +28,5 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+- Barber-area logins live in Lovable Cloud (bcrypt-hashed via DB functions callable only by service_role) and are reached from public/nova-era.html through /api/public/barber-accounts; why: changes must apply on every device.

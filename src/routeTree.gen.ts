@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiPublicBarberAccountsRouteImport } from './routes/api/public/barber-accounts'
+import { Route as ApiPublicSiteDataRouteImport } from './routes/api/public/site-data'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -22,31 +23,40 @@ const ApiPublicBarberAccountsRoute = ApiPublicBarberAccountsRouteImport.update({
   path: '/api/public/barber-accounts',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSiteDataRoute = ApiPublicSiteDataRouteImport.update({
+  id: '/api/public/site-data',
+  path: '/api/public/site-data',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/api/public/barber-accounts': typeof ApiPublicBarberAccountsRoute
+  '/api/public/site-data': typeof ApiPublicSiteDataRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/api/public/barber-accounts': typeof ApiPublicBarberAccountsRoute
+  '/api/public/site-data': typeof ApiPublicSiteDataRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/api/public/barber-accounts': typeof ApiPublicBarberAccountsRoute
+  '/api/public/site-data': typeof ApiPublicSiteDataRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/public/barber-accounts'
+  fullPaths: '/' | '/api/public/barber-accounts' | '/api/public/site-data'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/public/barber-accounts'
-  id: '__root__' | '/' | '/api/public/barber-accounts'
+  to: '/' | '/api/public/barber-accounts' | '/api/public/site-data'
+  id: '__root__' | '/' | '/api/public/barber-accounts' | '/api/public/site-data'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ApiPublicBarberAccountsRoute: typeof ApiPublicBarberAccountsRoute
+  ApiPublicSiteDataRoute: typeof ApiPublicSiteDataRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -65,12 +75,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicBarberAccountsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/site-data': {
+      id: '/api/public/site-data'
+      path: '/api/public/site-data'
+      fullPath: '/api/public/site-data'
+      preLoaderRoute: typeof ApiPublicSiteDataRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ApiPublicBarberAccountsRoute: ApiPublicBarberAccountsRoute,
+  ApiPublicSiteDataRoute: ApiPublicSiteDataRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

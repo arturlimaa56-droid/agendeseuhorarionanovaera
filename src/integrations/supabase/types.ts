@@ -73,6 +73,54 @@ export type Database = {
           },
         ]
       }
+      bookings: {
+        Row: {
+          barber: string
+          created_at: string
+          data: Json
+          date: string
+          dur: number
+          id: string
+          time: string
+        }
+        Insert: {
+          barber: string
+          created_at?: string
+          data: Json
+          date: string
+          dur?: number
+          id: string
+          time: string
+        }
+        Update: {
+          barber?: string
+          created_at?: string
+          data?: Json
+          date?: string
+          dur?: number
+          id?: string
+          time?: string
+        }
+        Relationships: []
+      }
+      site_content: {
+        Row: {
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -82,6 +130,7 @@ export type Database = {
       ne_list: { Args: { _token: string }; Returns: Json }
       ne_login: { Args: { _name: string; _pin: string }; Returns: Json }
       ne_master: { Args: { _token: string }; Returns: boolean }
+      ne_session: { Args: { _token: string }; Returns: Json }
       ne_set_pin: {
         Args: { _id: string; _pin: string; _token: string }
         Returns: undefined

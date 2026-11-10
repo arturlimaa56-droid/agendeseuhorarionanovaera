@@ -47,7 +47,7 @@ export const Route = createFileRoute("/api/public/site-data")({
           if (clash.data?.length) return Response.json({ error: "taken" }, { status: 409 });
           const data: Record<string, string | number> = {};
           for (const k of ["id", "barber", "barberName", "date", "time", "name", "phone", "service"]) data[k] = str(b[k]);
-          data.dur = row.dur;
+          data["dur"] = row.dur;
           const r = await db.from("bookings").insert({ ...row, data });
           return r.error ? Response.json({ error: "fail" }, { status: 500 }) : Response.json({ ok: true });
         }

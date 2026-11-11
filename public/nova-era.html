@@ -184,8 +184,10 @@ function applySite(){
 async function saveBooking(b){
   if(fs){
     try{
-      await fs.collection("busy").doc(b.id).set({id:b.id,barber:b.barber,date:b.date,time:b.time,dur:b.dur});
-      await fs.collection("bookings").doc(b.id).set(b);
+      var lock=fs.collection("busy").doc(b.id);
+      await lock.create({id:b.id,barber:b.barber,date:b.date,time:b.time,dur:b.dur});
+      try{await fs.collection("bookings").doc(b.id).create(b)}
+      catch(e){await lock.delete();throw e}
       dbNote="shared";return true;
     }catch(e){return false}
   }
@@ -205,7 +207,7 @@ async function removeBooking(id){
 /* ---------- datas e horários ---------- */
 function iso(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
 function daysList(){var out=[],d=new Date();while(out.length<12){if(d.getDay()!==0)out.push(new Date(d));d.setDate(d.getDate()+1)}return out}
-function times(){var o=[];for(var m=540;m<1140;m+=15){if(m>=720&&m<840)continue;o.push(String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0"))}return o}
+function times(){var o=[];for(var m=540;m<1140;m+=30){if(m>=720&&m<840)continue;o.push(String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0"))}return o}
 function tm(t){var p=t.split(":");return +p[0]*60+ +p[1]}
 function svc(){return SERVICES.filter(function(s){return s.id===sel.service})[0]}
 function fits(st,d){var e=st+d;return st<720?e<=720:e<=1140}

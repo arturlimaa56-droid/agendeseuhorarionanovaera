@@ -83,12 +83,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Nova Era Barbearia" },
       { name: "description", content: "Agendamento online da Nova Era Barbearia" },
-      { name: "author", content: "Lovable" },
       { property: "og:title", content: "Nova Era Barbearia" },
       { property: "og:description", content: "Agendamento online da Nova Era Barbearia" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
       {

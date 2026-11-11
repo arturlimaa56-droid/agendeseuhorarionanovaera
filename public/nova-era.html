@@ -393,6 +393,7 @@ async function saveEd(){
   var meta={loc:out.loc,links:out.links,closed:out.closed,barbers:{}},jobs=[],old=(siteMeta&&siteMeta.barbers)||{};
   for(var bi=0;bi<BARBERS.length;bi++){
     var id=BARBERS[bi].id,d=out.barbers[id],ph=(d.photos||[]).filter(okImg),on=(old[id]&&old[id].n)||0;
+    if(ME&&ME.b&&id!==ME.b){meta.barbers[id]=old[id]||{wa:d.wa,ig:d.ig,bio:d.bio,n:ph.length};continue}
     for(var k=0;k<ph.length;k++){
       if(ph[k].length>240000)return edErr("Uma das fotos ficou pesada demais. Remova e envie de novo.");
       if(!(sitePh&&sitePh[id]&&sitePh[id][k]===ph[k]))jobs.push({id:id,k:k,u:ph[k]});
@@ -408,7 +409,7 @@ async function saveEd(){
     setTimeout(function(){var e=$("edSave");if(e)e.textContent="Salvar e publicar"},2500);
   }catch(x){
     $("edSave").disabled=false;
-    edErr("Não foi possível salvar agora. Confira a internet e tente de novo.");
+    edErr(x&&x.message==="forbidden"?"Seu acesso não permite salvar estas alterações ou a sessão expirou. Volte e entre novamente.":"Não foi possível salvar agora. Confira a internet e tente de novo.");
   }
 }
 var LB=null;

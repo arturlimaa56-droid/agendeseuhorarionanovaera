@@ -43,8 +43,20 @@ export const Route = createFileRoute("/api/public/site-data")({
           const b = body.booking || {};
           const row = { id: str(b.id, 60), barber: str(b.barber, 10), date: str(b.date, 10), time: str(b.time, 5), dur: Math.min(240, Math.max(5, Number(b.dur) || 30)) };
           if (!row.id || !/^b\d$/.test(row.barber) || !/^\d{4}-\d{2}-\d{2}$/.test(row.date) || !/^\d{2}:\d{2}$/.test(row.time)) return Response.json({ error: "bad" }, { status: 400 });
-          const clash = await db.from("bookings").select("id").eq("barber", row.barber).eq("date", row.date).eq("time", row.time).limit(1);
-          if (clash.data?.length) return Response.json({ error: "taken" }, { status: 409 });
+          const minute = Number(row.time.slice(3, 5));
+          if (minute !== 0 && minute !== 30) return Response.json({ error: "invalid_slot" }, { status: 400 });
+          const [hours, minutes] = row.time.split(":").map(Number);
+          const start = hours * 60 + minutes;
+          const end = start + row.dur;
+          const existing = await db.from("bookings").select("id,time,dur").eq("barber", row.barber).eq("date", row.date);
+          if (existing.error) return Response.json({ error: "fail" }, { status: 500 });
+          const clash = (existing.data || []).some((booking: any) => {
+            const [h, m] = String(booking.time).slice(0, 5).split(":").map(Number);
+            const bookedStart = h * 60 + m;
+            const bookedEnd = bookedStart + (Number(booking.dur) || 30);
+            return bookedStart < end && start < bookedEnd;
+          });
+          if (clash) return Response.json({ error: "taken" }, { status: 409 });
           const data: Record<string, string | number> = {};
           for (const k of ["id", "barber", "barberName", "date", "time", "name", "phone", "service"]) data[k] = str(b[k]);
           data["dur"] = row.dur;

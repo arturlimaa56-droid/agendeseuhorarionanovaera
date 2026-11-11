@@ -30,3 +30,4 @@ use the editor.
 <!-- LOVABLE:END -->
 
 - Barber-area logins live in Lovable Cloud (bcrypt-hashed via DB functions callable only by service_role) and are reached from public/nova-era.html through /api/public/barber-accounts; why: changes must apply on every device.
+- The site editor queues photo writes only for the signed-in barber, while the administrator can save both profiles; why: unrelated unsynchronized photos must not cause authorized saves to fail.

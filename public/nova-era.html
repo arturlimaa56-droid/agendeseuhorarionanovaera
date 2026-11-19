@@ -5,8 +5,8 @@
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 body{margin:0;background:var(--bg);color:var(--txt);font-family:Georgia,"Times New Roman",serif;line-height:1.5}
 .pole{height:6px;background:repeating-linear-gradient(135deg,var(--red) 0 12px,#fff 12px 24px,var(--blue) 24px 36px,#fff 36px 48px)}
-header{text-align:center;padding:18px 16px 14px;border-bottom:1px solid var(--line);background:radial-gradient(ellipse at top,#241d0c,transparent 70%)}
-.brand-logo{display:block;width:min(100%,320px);max-height:340px;object-fit:contain;margin:0 auto}
+header{text-align:center;padding:18px 16px 14px;border-bottom:1px solid var(--line);background:transparent}
+.brand-logo{display:block;width:min(100%,320px);max-height:340px;object-fit:contain;margin:0 auto;mix-blend-mode:screen;background:transparent}
 .visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 h1{margin:0;font-size:2.2rem;letter-spacing:.28em;font-weight:400;color:var(--gold2);text-transform:uppercase}
 h1 span{display:block;font-size:.8rem;letter-spacing:.5em;color:var(--mut);margin-top:4px}
@@ -61,7 +61,6 @@ select{width:100%;background:#0f0f10;color:var(--txt);border:1px solid var(--lin
 .lb img{max-width:96vw;max-height:86vh;object-fit:contain;border-radius:6px}
 .lb button{position:absolute;background:#000b;color:#fff;border:1px solid var(--gold);border-radius:50%;width:44px;height:44px;font-size:1.5rem;line-height:1;cursor:pointer}
 .lb .cl{top:calc(12px + env(safe-area-inset-top,0px));right:12px}.lb .pv{left:8px;top:50%;margin-top:-22px}.lb .nx{right:8px;top:50%;margin-top:-22px}
-body::before{content:"";position:fixed;inset:0;z-index:-1;background:linear-gradient(rgba(11,11,12,.62),rgba(11,11,12,.84)),url("/nova-era-logo.webp") center top/cover no-repeat;opacity:.42;pointer-events:none}
 </style>
 </head><body><template id="tpl">
 <div class="pole"></div>

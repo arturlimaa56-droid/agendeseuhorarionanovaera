@@ -5,6 +5,7 @@
 *,*:before,*:after{box-sizing:inherit}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 body{margin:0;background:var(--bg);color:var(--txt);font-family:"Bodoni Moda",Didot,"Times New Roman",serif;line-height:1.5}
+body::before{content:"";position:fixed;inset:0;z-index:-1;background:url("/nova-era-logo.webp") center top/contain no-repeat;opacity:1;pointer-events:none}
 .pole{height:6px;background:repeating-linear-gradient(135deg,var(--red) 0 12px,#fff 12px 24px,var(--blue) 24px 36px,#fff 36px 48px)}
 header{text-align:center;padding:18px 16px 14px;border-bottom:1px solid var(--line);background:transparent}
 .brand-logo{display:block;width:min(100%,320px);max-height:340px;object-fit:contain;margin:0 auto;mix-blend-mode:screen;background:transparent}

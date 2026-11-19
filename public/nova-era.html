@@ -5,10 +5,11 @@
 *,*:before,*:after{box-sizing:inherit}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 body{margin:0;background:var(--bg);color:var(--txt);font-family:"Bodoni Moda",Didot,"Times New Roman",serif;line-height:1.5}
-body::before{content:"";position:fixed;inset:0;z-index:-1;background:url("/nova-era-logo.webp") center top/contain no-repeat;opacity:1;pointer-events:none}
-.pole{height:6px;background:repeating-linear-gradient(135deg,var(--red) 0 12px,#fff 12px 24px,var(--blue) 24px 36px,#fff 36px 48px)}
-header{text-align:center;padding:18px 16px 14px;border-bottom:1px solid var(--line);background:transparent}
-.brand-logo{display:block;width:min(100%,320px);max-height:340px;object-fit:contain;margin:0 auto;mix-blend-mode:screen;background:transparent}
+body{background:#050505}
+.pole{display:none}
+header{text-align:center;padding:20px 16px 18px;border-bottom:1px solid rgba(201,162,74,.22);background:#050505}
+.brand-logo{display:block;width:184px;height:184px;max-height:none;object-fit:contain;margin:0 auto;border:2px solid var(--gold);border-radius:50%;padding:12px;background:#000;box-shadow:0 0 0 5px rgba(201,162,74,.08),0 8px 28px rgba(0,0,0,.65);mix-blend-mode:normal}
+.rule{display:none}
 .visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 h1{margin:0;font-size:2.2rem;letter-spacing:.28em;font-weight:400;color:var(--gold2);text-transform:uppercase}
 h1 span{display:block;font-size:.8rem;letter-spacing:.5em;color:var(--mut);margin-top:4px}
@@ -19,7 +20,20 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom,0px))}
 #siteTabs button{flex:1;min-width:0;background:none;border:0;color:var(--mut);cursor:pointer;padding:5px 1px;font:500 10px "Bodoni Moda",serif;display:flex;flex-direction:column;align-items:center;gap:3px;white-space:nowrap}
 #siteTabs button span{font-size:19px;line-height:1.2}
 #siteTabs button[aria-current="page"]{color:var(--gold2)}
-.site-page{display:block}
+.site-page{display:block;animation:pageEnter .36s ease both}
+@keyframes pageEnter{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){.site-page{animation:none}#siteTabs button{transition:none}}
+#siteTabs button{transition:color .25s ease,transform .25s ease}
+#siteTabs button:active{transform:scale(.96)}
+.home-work .sub{border-top:1px solid rgba(201,162,74,.45);padding-top:14px}
+.home-work .sub>b{display:block;color:var(--gold2);font-size:1.05rem;letter-spacing:.12em;text-transform:uppercase}
+.home-work .gal{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.home-work .gal img{aspect-ratio:4/5;border-radius:8px}
+.style-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.style-card{background:#101010;border:1px solid rgba(201,162,74,.28);border-radius:9px;padding:12px}
+.style-card b{display:block;color:var(--gold2);font-size:.88rem;letter-spacing:.06em;margin-bottom:5px}
+.style-card p{margin:0;color:var(--mut);font-size:.78rem;line-height:1.45}
+@media(max-width:360px){.style-grid{grid-template-columns:1fr}}
 .home-hero{text-align:center;padding:34px 22px 30px;margin-top:12px;background:linear-gradient(160deg,rgba(35,29,17,.96),rgba(14,14,15,.96));border:1px solid rgba(201,162,74,.5);border-radius:14px;box-shadow:0 18px 48px rgba(0,0,0,.3)}
 .home-hero .eyebrow{color:var(--gold2);font-size:.72rem;letter-spacing:.28em;margin:0 0 18px}
 .home-title{font-size:clamp(1.7rem,7vw,2.5rem);letter-spacing:.04em;line-height:1.15;color:var(--txt);margin:0 0 14px;text-transform:none}
@@ -87,6 +101,7 @@ select{width:100%;background:#0f0f10;color:var(--txt);border:1px solid var(--lin
 <main>
   <div id="page-home" class="site-page">
     <section class="home-hero"><p class="eyebrow">BARBEARIA NOVA ERA</p><h2 class="home-title">Seu estilo começa aqui.</h2><p class="home-copy">Cuidado, precisão e personalidade em cada detalhe. Escolha seu barbeiro e reserve seu horário.</p><button type="button" class="go" id="homeBook">Agendar horário</button><a class="home-whatsapp" href="https://wa.me/5586999981178?text=Ol%C3%A1%2C%20Nova%20Era!%20Gostaria%20de%20mais%20informa%C3%A7%C3%B5es." target="_blank" rel="noopener">Chamar no WhatsApp</a></section>
+    <section id="homeWork" class="home-work"></section>
   </div>
 
   <div id="page-booking" class="site-page hide">
@@ -116,6 +131,7 @@ select{width:100%;background:#0f0f10;color:var(--txt);border:1px solid var(--lin
   </div>
 
   <div id="page-cuts" class="site-page hide">
+    <section id="cutStyles"></section>
     <section id="showcase"></section>
   </div>
 
@@ -316,7 +332,7 @@ function renderAdmin(){
   l.innerHTML=h;
   Array.prototype.forEach.call(l.querySelectorAll(".x"),function(x){x.onclick=function(){var id=x.getAttribute("data-id"),b=all().filter(function(q){return q.id===id})[0];if(!b||!confirm("Cancelar este horário e avisar o cliente pelo WhatsApp?"))return;var n=String(b.phone).replace(/\D/g,"").replace(/^0+/,"");if(n.length<=11)n="55"+n;var m="Olá, "+b.name+"! Aqui é da Nova Era Barbearia. Precisamos cancelar seu horário de "+b.service+" com "+b.barberName+" ("+fmtDate(b.date)+" às "+b.time+"). Podemos combinar outro horário? Me diga qual dia e hora ficam melhores para você.";window.open("https://wa.me/"+n+"?text="+encodeURIComponent(m),"_blank");removeBooking(id)}});
 }
-function showSitePage(page){["home","booking","about","cuts"].forEach(function(p){var el=$("page-"+p);if(el)el.classList.toggle("hide",p!==page)});Array.prototype.forEach.call(document.querySelectorAll("#siteTabs button[data-page]"),function(b){if(b.dataset.page===page)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});window.scrollTo(0,0)}
+function showSitePage(page){["home","booking","about","cuts"].forEach(function(p){var el=$("page-"+p);if(el){el.classList.add("hide");if(p===page){void el.offsetWidth;el.classList.remove("hide")}}});Array.prototype.forEach.call(document.querySelectorAll("#siteTabs button[data-page]"),function(b){if(b.dataset.page===page)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});window.scrollTo({top:0,behavior:"smooth"})}
 function openBarberPanel(){$("siteTabs").classList.add("hide");["home","booking","about","cuts"].forEach(function(p){var el=$("page-"+p);if(el)el.classList.add("hide")});$("page-booking").classList.remove("hide");$("booking").classList.add("hide");$("done").classList.add("hide");$("admin").classList.remove("hide");$("adminBtn").classList.add("hide");window.scrollTo(0,0)}
 $("siteTabs").addEventListener("click",function(e){var b=e.target.closest("button[data-page]");if(!b)return;if(b.dataset.page==="panel"){openBarberPanel();return}showSitePage(b.dataset.page)});
 $("homeBook").onclick=function(){showSitePage("booking")};
@@ -353,8 +369,34 @@ function renderContact(){
   });
   var w=$("contact");w.innerHTML=ct?"<h2>Fale com a gente</h2>"+ct:"";w.classList.toggle("hide",!ct);
 }
+function renderHomeWork(){
+  var h="";
+  BARBERS.forEach(function(b,i){
+    var d=DATA.barbers[b.id]||{},p=(d.photos||[]).filter(okImg);
+    if(!p.length)return;
+    h+='<div class="sub'+(i?" r":"")+'"><b>'+esc(b.name)+'</b>'+(d.bio?'<div class="note">'+esc(d.bio)+'</div>':"")+'<div class="gal">'+p.map(function(u,k){return '<img loading="lazy" data-g="'+b.id+'" data-k="'+k+'" alt="Trabalho de '+attr(b.name)+'" src="'+u+'">'}).join("")+'</div></div>';
+  });
+  $("homeWork").innerHTML="<h2>Trabalhos dos nossos barbeiros</h2>"+(h||'<p class="note">As fotos dos trabalhos aparecerão aqui em breve.</p>');
+}
+function renderCutStyles(){
+  var styles=[
+    ["Low Fade","Degradê baixo, começando próximo às orelhas. Um acabamento discreto e versátil."],
+    ["Mid Fade","Degradê médio, na altura das têmporas. Equilíbrio entre discrição e contraste."],
+    ["High Fade","Degradê alto, com laterais mais curtas e contraste mais evidente."],
+    ["Jit Fade","Têmporas bem definidas, contorno marcado e volume ou textura no topo."],
+    ["Taper Fade","Acabamento gradual nas costeletas e na nuca, mantendo mais cabelo nas laterais."],
+    ["Burst Fade","Degradê em formato de arco ao redor das orelhas, geralmente combinado com topo mais destacado."],
+    ["Drop Fade","Degradê que acompanha a curva da cabeça e desce atrás das orelhas."],
+    ["Skin Fade","Degradê que chega bem rente à pele na parte inferior das laterais."],
+    ["Shadow Fade","Degradê suave que mantém uma sombra de cabelo, sem chegar totalmente à pele."],
+    ["French Crop","Topo curto e texturizado, com franja frontal e laterais em degradê."],
+    ["Corte Americano","Laterais em degradê, contorno definido e topo com mais comprimento."],
+    ["Mullet Fade","Laterais em degradê, com comprimento preservado na parte de trás."]
+  ];
+  $("cutStyles").innerHTML='<h2>Encontre seu estilo</h2><p class="note">Escolha uma referência e converse com o barbeiro para adaptar o corte ao seu cabelo.</p><div class="style-grid">'+styles.map(function(x){return '<article class="style-card"><b>'+x[0]+'</b><p>'+x[1]+'</p></article>'}).join("")+'</div>';
+}
 function renderShowcase(){
-  renderContact();
+  renderContact();renderHomeWork();renderCutStyles();
   var h="";
   BARBERS.forEach(function(b,i){
     var d=DATA.barbers[b.id]||{},p=(d.photos||[]).filter(okImg),c="";
@@ -455,7 +497,9 @@ function closeLb(keep){var d=document.getElementById("lb");if(d)d.remove();if(!k
 function drawLb(){closeLb(true);var d=document.createElement("div"),n=LB.ph.length;d.className="lb";d.id="lb";d.innerHTML='<img alt="Foto do trabalho" src="'+LB.ph[LB.k]+'"><button class="cl" aria-label="Fechar">×</button>'+(n>1?'<button class="pv" aria-label="Anterior">‹</button><button class="nx" aria-label="Próxima">›</button>':'');d.onclick=function(e){var c=e.target.className;if(c==="pv")step(-1);else if(c==="nx")step(1);else closeLb()};document.body.appendChild(d)}
 function step(x){LB.k=(LB.k+x+LB.ph.length)%LB.ph.length;drawLb()}
 document.addEventListener("keydown",function(e){if(!LB)return;if(e.key==="Escape")closeLb();if(e.key==="ArrowRight")step(1);if(e.key==="ArrowLeft")step(-1)});
-$("showcase").addEventListener("click",function(e){var t=e.target;if(t.dataset&&t.dataset.g){var ph=((DATA.barbers[t.dataset.g]||{}).photos||[]).filter(okImg);if(ph.length){LB={ph:ph,k:+t.dataset.k};drawLb()}}});
+function galleryClick(e){var t=e.target;if(t.dataset&&t.dataset.g){var ph=((DATA.barbers[t.dataset.g]||{}).photos||[]).filter(okImg);if(ph.length){LB={ph:ph,k:+t.dataset.k};drawLb()}}}
+$("showcase").addEventListener("click",galleryClick);
+$("homeWork").addEventListener("click",galleryClick);
 function renderClosed(){var l=$("clList");if(!l)return;var a=(ED.closed=ED.closed||[]).map(function(c,i){return {c:c,i:i}}).sort(function(x,y){return x.c.d.localeCompare(y.c.d)});l.innerHTML=a.map(function(o){var c=o.c,w=c.b==="all"?"Todos":(BARBERS.filter(function(b){return b.id===c.b})[0]||{}).name;return '<div class="row"><span class="c">'+esc(fmtDate(c.d))+' · '+esc(w||"")+(c.n?'<small>'+esc(c.n)+'</small>':"")+'</span><button class="x" type="button" data-rc="'+o.i+'">Remover</button></div>'}).join("")}
 $("edWrap").addEventListener("click",function(e){
   var t=e.target;

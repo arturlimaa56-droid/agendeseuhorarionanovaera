@@ -293,7 +293,7 @@ $("send").onclick=async function(){
   if(!sel.service)return showErr("Escolha o serviço.");
   if(name.length<2)return showErr("Digite seu nome.");
   if(ph.replace(/\D/g,"").length<8)return showErr("Digite um telefone válido.");
-  if(svc()&&svc().whatsapp){var chemBarber=BARBERS.filter(function(b){return b.id===sel.barber})[0],chemWa=(DATA.barbers[chemBarber.id]||{}).wa||chemBarber.wa||WHATSAPP;if(!chemWa)return showErr("WhatsApp do barbeiro indisponível.");var chemMsg="Olá, "+name+"! Gostaria de combinar um serviço de química na Nova Era Barbearia. Meu contato: "+ph+".";window.open("https://wa.me/"+String(chemWa).replace(/\D/g,"")+"?text="+encodeURIComponent(chemMsg),"_blank","noopener");return}
+  if(svc()&&svc().whatsapp){var chemBarber=BARBERS.filter(function(b){return b.id===sel.barber})[0],chemWa=(DATA.barbers[chemBarber.id]||{}).wa||chemBarber.wa||WHATSAPP;if(!chemWa)return showErr("WhatsApp do barbeiro indisponível.");var chemMsg="Olá, "+chemBarber.name+"! Gostaria de agendar um horário para fazer química. Podemos combinar o melhor dia e horário? Meu nome é "+name+" e meu contato é "+ph+".";window.open("https://wa.me/"+String(chemWa).replace(/\D/g,"")+"?text="+encodeURIComponent(chemMsg),"_blank","noopener");return}
   if(!sel.date)return showErr("Escolha o dia.");
   if(!sel.time)return showErr("Escolha o horário.");
   if(closedOn(sel.barber,sel.date))return showErr("Esse dia está fechado. Escolha outro dia.");

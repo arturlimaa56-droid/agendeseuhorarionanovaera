@@ -16,10 +16,17 @@ h1 span{display:block;font-size:.8rem;letter-spacing:.5em;color:var(--mut);margi
 main{max-width:640px;margin:0 auto;padding:20px 16px 60px}
 body{padding-bottom:calc(86px + env(safe-area-inset-bottom,0px))}
 #siteTabs{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;justify-content:space-around;gap:4px;background:#080808;border-top:1px solid var(--gold);padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px))}
-#siteTabs button{flex:1;min-width:0;background:none;border:0;color:var(--mut);cursor:pointer;padding:5px 2px;font:500 12px "Bodoni Moda",serif;display:flex;flex-direction:column;align-items:center;gap:3px}
+#siteTabs button{flex:1;min-width:0;background:none;border:0;color:var(--mut);cursor:pointer;padding:5px 1px;font:500 10px "Bodoni Moda",serif;display:flex;flex-direction:column;align-items:center;gap:3px;white-space:nowrap}
 #siteTabs button span{font-size:19px;line-height:1.2}
 #siteTabs button[aria-current="page"]{color:var(--gold2)}
 .site-page{display:block}
+.home-hero{text-align:center;padding:34px 22px 30px;margin-top:12px;background:linear-gradient(160deg,rgba(35,29,17,.96),rgba(14,14,15,.96));border:1px solid rgba(201,162,74,.5);border-radius:14px;box-shadow:0 18px 48px rgba(0,0,0,.3)}
+.home-hero .eyebrow{color:var(--gold2);font-size:.72rem;letter-spacing:.28em;margin:0 0 18px}
+.home-title{font-size:clamp(1.7rem,7vw,2.5rem);letter-spacing:.04em;line-height:1.15;color:var(--txt);margin:0 0 14px;text-transform:none}
+.home-copy{color:var(--mut);font-size:.95rem;max-width:360px;margin:0 auto 20px}
+.home-hero .go{display:block;text-decoration:none;max-width:360px;margin:0 auto 12px}
+.home-whatsapp{display:block;max-width:360px;margin:0 auto;padding:12px;border:1px solid var(--gold);border-radius:8px;color:var(--gold2);text-decoration:none;font-size:.9rem;letter-spacing:.08em;text-transform:uppercase}
+.home-whatsapp:active{background:rgba(201,162,74,.12)}
 section{background:rgba(21,21,23,.9);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:16px}
 h2{margin:0 0 12px;font-size:.95rem;font-weight:400;letter-spacing:.18em;text-transform:uppercase;color:var(--gold)}
 h2 b{display:inline-block;width:22px;height:22px;line-height:22px;text-align:center;border-radius:50%;background:var(--gold);color:#000;font-size:.8rem;margin-right:8px;letter-spacing:0}
@@ -76,10 +83,14 @@ select{width:100%;background:#0f0f10;color:var(--txt);border:1px solid var(--lin
   <img class="brand-logo" src="/nova-era-logo.webp" alt="Barbearia Nova Era"><h1 class="visually-hidden">Nova Era<span>Barbearia</span></h1>
   <div class="rule"></div>
 </header>
-<nav id="siteTabs" aria-label="Navegação principal"><button type="button" data-page="booking" aria-current="page"><span aria-hidden="true">📅</span>Agendamento</button><button type="button" data-page="about"><span aria-hidden="true">✦</span>Quem Somos</button><button type="button" data-page="work"><span aria-hidden="true">✂</span>Trabalhos</button></nav>
+<nav id="siteTabs" aria-label="Navegação principal"><button type="button" data-page="home" aria-current="page"><span aria-hidden="true">⌂</span>Início</button><button type="button" data-page="cuts"><span aria-hidden="true">✂</span>Estilos</button><button type="button" data-page="booking"><span aria-hidden="true">▣</span>Agenda</button><button type="button" data-page="about"><span aria-hidden="true">✦</span>Quem somos</button><button type="button" data-page="panel"><span aria-hidden="true">♙</span>Painel</button></nav>
 <main>
-  <div id="page-booking" class="site-page">
-  <div class="top"><button class="ghost" id="adminBtn">Área do barbeiro</button></div>
+  <div id="page-home" class="site-page">
+    <section class="home-hero"><p class="eyebrow">BARBEARIA NOVA ERA</p><h2 class="home-title">Seu estilo começa aqui.</h2><p class="home-copy">Cuidado, precisão e personalidade em cada detalhe. Escolha seu barbeiro e reserve seu horário.</p><button type="button" class="go" id="homeBook">Agendar horário</button><a class="home-whatsapp" href="https://wa.me/5586999981178?text=Ol%C3%A1%2C%20Nova%20Era!%20Gostaria%20de%20mais%20informa%C3%A7%C3%B5es." target="_blank" rel="noopener">Chamar no WhatsApp</a></section>
+  </div>
+
+  <div id="page-booking" class="site-page hide">
+  <div class="top hide"><button class="ghost" id="adminBtn">Área do barbeiro</button></div>
 
   <div id="booking">
     <section><h2><b>1</b>Escolha o barbeiro</h2>
@@ -104,7 +115,7 @@ select{width:100%;background:#0f0f10;color:var(--txt);border:1px solid var(--lin
     <section><h2>Quem Somos</h2><p>A Nova Era Barbearia é um espaço dedicado ao cuidado, ao estilo e à autoestima. Nosso objetivo é oferecer um atendimento atencioso e uma experiência de qualidade em cada visita.</p><div id="contact" class="hide"></div></section>
   </div>
 
-  <div id="page-work" class="site-page hide">
+  <div id="page-cuts" class="site-page hide">
     <section id="showcase"></section>
   </div>
 
@@ -305,10 +316,12 @@ function renderAdmin(){
   l.innerHTML=h;
   Array.prototype.forEach.call(l.querySelectorAll(".x"),function(x){x.onclick=function(){var id=x.getAttribute("data-id"),b=all().filter(function(q){return q.id===id})[0];if(!b||!confirm("Cancelar este horário e avisar o cliente pelo WhatsApp?"))return;var n=String(b.phone).replace(/\D/g,"").replace(/^0+/,"");if(n.length<=11)n="55"+n;var m="Olá, "+b.name+"! Aqui é da Nova Era Barbearia. Precisamos cancelar seu horário de "+b.service+" com "+b.barberName+" ("+fmtDate(b.date)+" às "+b.time+"). Podemos combinar outro horário? Me diga qual dia e hora ficam melhores para você.";window.open("https://wa.me/"+n+"?text="+encodeURIComponent(m),"_blank");removeBooking(id)}});
 }
-function showSitePage(page){["booking","about","work"].forEach(function(p){var el=$("page-"+p);if(el)el.classList.toggle("hide",p!==page)});Array.prototype.forEach.call(document.querySelectorAll("#siteTabs button[data-page]"),function(b){if(b.dataset.page===page)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});window.scrollTo(0,0)}
-$("siteTabs").addEventListener("click",function(e){var b=e.target.closest("button[data-page]");if(b)showSitePage(b.dataset.page)});
-$("adminBtn").onclick=function(){$("siteTabs").classList.add("hide");$("page-booking").classList.remove("hide");$("booking").classList.add("hide");$("done").classList.add("hide");$("admin").classList.remove("hide");$("adminBtn").classList.add("hide")};
-$("back").onclick=function(){if(fbAuth){if(unsubFull){unsubFull();unsubFull=null}fullDocs=[];fbAuth.signOut();mergeDb()}$("pinErr").classList.add("hide");$("admin").classList.add("hide");$("siteTabs").classList.remove("hide");showSitePage("booking");$("adminBtn").classList.remove("hide");$("booking").classList.remove("hide");$("pin").value="";$("uname").value="";ME=null;$("pinBox").classList.remove("hide");$("list").classList.add("hide");UNL=false;$("admTabs").classList.add("hide");$("edWrap").classList.add("hide");if($("accMgr"))$("accMgr").classList.add("hide");renderAll()};
+function showSitePage(page){["home","booking","about","cuts"].forEach(function(p){var el=$("page-"+p);if(el)el.classList.toggle("hide",p!==page)});Array.prototype.forEach.call(document.querySelectorAll("#siteTabs button[data-page]"),function(b){if(b.dataset.page===page)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});window.scrollTo(0,0)}
+function openBarberPanel(){$("siteTabs").classList.add("hide");["home","booking","about","cuts"].forEach(function(p){var el=$("page-"+p);if(el)el.classList.add("hide")});$("page-booking").classList.remove("hide");$("booking").classList.add("hide");$("done").classList.add("hide");$("admin").classList.remove("hide");$("adminBtn").classList.add("hide");window.scrollTo(0,0)}
+$("siteTabs").addEventListener("click",function(e){var b=e.target.closest("button[data-page]");if(!b)return;if(b.dataset.page==="panel"){openBarberPanel();return}showSitePage(b.dataset.page)});
+$("homeBook").onclick=function(){showSitePage("booking")};
+$("adminBtn").onclick=openBarberPanel;
+$("back").onclick=function(){if(fbAuth){if(unsubFull){unsubFull();unsubFull=null}fullDocs=[];fbAuth.signOut();mergeDb()}$("pinErr").classList.add("hide");$("admin").classList.add("hide");$("siteTabs").classList.remove("hide");showSitePage("home");$("adminBtn").classList.remove("hide");$("booking").classList.remove("hide");$("pin").value="";$("uname").value="";ME=null;$("pinBox").classList.remove("hide");$("list").classList.add("hide");UNL=false;$("admTabs").classList.add("hide");$("edWrap").classList.add("hide");if($("accMgr"))$("accMgr").classList.add("hide");renderAll()};
 $("pinGo").onclick=async function(){
   var acc=null;$("pinGo").disabled=true;
   try{acc=await api({action:"login",name:$("uname").value.trim(),pin:$("pin").value})}catch(e){acc=null}
@@ -352,7 +365,7 @@ function renderShowcase(){
   var any=h;
   if(!any)h='<p class="note">Em breve você vai ver aqui as fotos dos nossos trabalhos.</p>';
   if(PUB.test(DATA.loc||""))h='<div><a class="lnk" target="_blank" rel="noopener" href="'+attr(DATA.loc)+'">📍 Localização · como chegar</a></div>'+h;
-  $("showcase").innerHTML="<h2>Nosso trabalho</h2>"+h;
+  $("showcase").innerHTML="<h2>Estilos de corte</h2>"+h;
 }
 function shrink(f){return new Promise(function(ok,no){var r=new FileReader();r.onload=function(){var im=new Image();im.onload=function(){var k=Math.min(1,800/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext("2d").drawImage(im,0,0,c.width,c.height);ok(c.toDataURL("image/jpeg",.62))};im.onerror=no;im.src=r.result};r.onerror=no;r.readAsDataURL(f)})}
 function edErr(m){var e=$("edErr");if(e){e.textContent=m;e.classList.remove("hide")}}

@@ -23,7 +23,7 @@ export const Route = createFileRoute("/api/public/site-data")({
         const today = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
         const [site, busy, last] = await Promise.all([
           db.from("site_content").select("value").eq("key", "site").maybeSingle(),
-          db.from("bookings").select("id,barber,date,time,dur").gte("date", today),
+          db.from("bookings").select("id,barber,date,time,dur,data").gte("date", today),
           db.from("site_content").select("updated_at").like("key", "photo:%").order("updated_at", { ascending: false }).limit(1).maybeSingle(),
         ]);
         const ver = String(last.data?.updated_at || "") + ":" + String((await db.from("site_content").select("key", { count: "exact", head: true }).like("key", "photo:%")).count || 0);
@@ -32,7 +32,8 @@ export const Route = createFileRoute("/api/public/site-data")({
           const p = await db.from("site_content").select("value").like("key", "photo:%");
           photos = (p.data || []).map((r: any) => r.value);
         }
-        return Response.json({ site: site.data?.value ?? null, busy: busy.data || [], photos, ver });
+        const busySlots = (busy.data || []).filter((b: any) => !["cancelled", "finished"].includes(b.data?.status)).map(({ id, barber, date, time, dur }: any) => ({ id, barber, date, time, dur }));
+        return Response.json({ site: site.data?.value ?? null, busy: busySlots, photos, ver });
       },
       POST: async ({ request }) => {
         let body: any;
@@ -48,9 +49,10 @@ export const Route = createFileRoute("/api/public/site-data")({
           const [hours, minutes] = row.time.split(":").map(Number);
           const start = hours * 60 + minutes;
           const end = start + row.dur;
-          const existing = await db.from("bookings").select("id,time,dur").eq("barber", row.barber).eq("date", row.date);
+          const existing = await db.from("bookings").select("id,time,dur,data").eq("barber", row.barber).eq("date", row.date);
           if (existing.error) return Response.json({ error: "fail" }, { status: 500 });
           const clash = (existing.data || []).some((booking: any) => {
+            if (["cancelled", "finished"].includes(booking.data?.status)) return false;
             const [h, m] = String(booking.time).slice(0, 5).split(":").map(Number);
             const bookedStart = h * 60 + m;
             const bookedEnd = bookedStart + (Number(booking.dur) || 30);
@@ -58,13 +60,44 @@ export const Route = createFileRoute("/api/public/site-data")({
           });
           if (clash) return Response.json({ error: "taken" }, { status: 409 });
           const data: Record<string, string | number> = {};
-          for (const k of ["id", "barber", "barberName", "date", "time", "name", "phone", "service"]) data[k] = str(b[k]);
+          for (const k of ["id", "barber", "barberName", "date", "time", "name", "phone", "service", "status"]) data[k] = str(b[k]);
+          if (!data["status"]) data["status"] = "scheduled";
           data["dur"] = row.dur;
           const r = await db.from("bookings").insert({ ...row, data });
           return r.error ? Response.json({ error: "fail" }, { status: 500 }) : Response.json({ ok: true });
         }
         const me = await session(db, str(body.token));
         if (!me) return Response.json({ error: "forbidden" }, { status: 403 });
+        if (action === "status") {
+          const id = str(body.id, 60);
+          const status = str(body.status, 20);
+          if (!id || !["scheduled", "cancelled", "finished"].includes(status)) return Response.json({ error: "bad" }, { status: 400 });
+          let currentQuery = db.from("bookings").select("id,barber,date,time,dur,data").eq("id", id);
+          if (me.b) currentQuery = currentQuery.eq("barber", me.b);
+          const current = await currentQuery.maybeSingle();
+          if (current.error || !current.data) return Response.json({ error: "not_found" }, { status: 404 });
+          const booking = current.data;
+          if (status === "scheduled") {
+            const existing = await db.from("bookings").select("id,time,dur,data").eq("barber", booking.barber).eq("date", booking.date);
+            if (existing.error) return Response.json({ error: "fail" }, { status: 500 });
+            const [hours, minutes] = String(booking.time).slice(0, 5).split(":").map(Number);
+            const start = hours * 60 + minutes;
+            const end = start + (Number(booking.dur) || 30);
+            const clash = (existing.data || []).some((other: any) => {
+              if (other.id === id || ["cancelled", "finished"].includes(other.data?.status)) return false;
+              const [h, m] = String(other.time).slice(0, 5).split(":").map(Number);
+              const otherStart = h * 60 + m;
+              return otherStart < end && start < otherStart + (Number(other.dur) || 30);
+            });
+            if (clash) return Response.json({ error: "taken" }, { status: 409 });
+          }
+          const data = { ...(booking.data || {}), status };
+          let updateQuery = db.from("bookings").update({ data }).eq("id", id);
+          if (me.b) updateQuery = updateQuery.eq("barber", me.b);
+          const updated = await updateQuery;
+          if (updated.error) return Response.json({ error: "fail" }, { status: 500 });
+          return Response.json({ ok: true });
+        }
         if (action === "list") {
           let q = db.from("bookings").select("data");
           if (me.b) q = q.eq("barber", me.b);

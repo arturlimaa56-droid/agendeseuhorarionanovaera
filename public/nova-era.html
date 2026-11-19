@@ -407,7 +407,7 @@ function renderShowcase(){
   var any=h;
   if(!any)h='<p class="note">Em breve você vai ver aqui as fotos dos nossos trabalhos.</p>';
   if(PUB.test(DATA.loc||""))h='<div><a class="lnk" target="_blank" rel="noopener" href="'+attr(DATA.loc)+'">📍 Localização · como chegar</a></div>'+h;
-  $("showcase").innerHTML="<h2>Estilos de corte</h2>"+h;
+  $("showcase").innerHTML="<h2>Galeria de trabalhos</h2>"+h;
 }
 function shrink(f){return new Promise(function(ok,no){var r=new FileReader();r.onload=function(){var im=new Image();im.onload=function(){var k=Math.min(1,800/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext("2d").drawImage(im,0,0,c.width,c.height);ok(c.toDataURL("image/jpeg",.62))};im.onerror=no;im.src=r.result};r.onerror=no;r.readAsDataURL(f)})}
 function edErr(m){var e=$("edErr");if(e){e.textContent=m;e.classList.remove("hide")}}

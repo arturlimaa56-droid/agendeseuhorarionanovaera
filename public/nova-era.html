@@ -301,11 +301,17 @@ $("send").onclick=async function(){
   if(all().some(function(b){return b.id===id})||conflict(sel.barber,sel.date,tm(sel.time),svc().min))return showErr("Esse horário acabou de ser ocupado. Escolha outro.");
   var br=BARBERS.filter(function(b){return b.id===sel.barber})[0],sv=SERVICES.filter(function(s){return s.id===sel.service})[0];
   var b={id:id,barber:br.id,barberName:br.name,service:sv.name,dur:sv.min,date:sel.date,time:sel.time,name:name,phone:ph,created:Date.now(),status:"scheduled"};
+  var barberWa=(DATA.barbers[br.id]||{}).wa||br.wa||WHATSAPP;
+  var waDigits=String(barberWa||"").replace(/\\D/g,"");
+  if(waDigits&&waDigits.length<=11)waDigits="55"+waDigits;
+  var waMessage="Olá, "+br.name+"! Acabei de agendar na Nova Era um horário para "+sv.name+" no dia "+fmtDate(b.date)+" às "+b.time+". Meu nome é "+name+" e meu contato é "+ph+". Podemos confirmar? Obrigado!";
+  var waTab=waDigits?window.open("about:blank","_blank"):null;
   $("send").disabled=true;
   var saved=await saveBooking(b);
   $("send").disabled=false;
-  if(!saved)return showErr("Não foi possível confirmar agora. Esse horário pode ter acabado de ser ocupado ou a internet falhou. Escolha outro e tente de novo.");
+  if(!saved){if(waTab)waTab.close();return showErr("Não foi possível confirmar agora. Esse horário pode ter acabado de ser ocupado ou a internet falhou. Escolha outro e tente de novo.");}
   showDone(b);
+  if(waTab)waTab.location.href="https://wa.me/"+waDigits+"?text="+encodeURIComponent(waMessage);
 };
 function showDone(b){
   $("booking").classList.add("hide");

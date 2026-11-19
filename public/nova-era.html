@@ -86,7 +86,7 @@ input:focus{outline:none;border-color:var(--gold)}
 .sub{border-top:3px solid var(--blue);padding-top:10px;margin-top:14px}.sub.r{border-top-color:var(--red)}
 .tabs{display:flex;gap:8px;margin-bottom:12px}.status-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 14px}.status-tabs button.active{border-color:var(--gold);color:var(--gold2);background:rgba(201,162,74,.12)}
 .gal img[data-g]{cursor:zoom-in}
-select{width:100%;background:#0f0f10;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:11px;font:inherit}
+select,textarea{width:100%;background:#0f0f10;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:11px;font:inherit}textarea{min-height:118px;resize:vertical;line-height:1.5}
 .lb{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.93);display:flex;align-items:center;justify-content:center;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}
 .lb img{max-width:96vw;max-height:86vh;object-fit:contain;border-radius:6px}
 .lb button{position:absolute;background:#000b;color:#fff;border:1px solid var(--gold);border-radius:50%;width:44px;height:44px;font-size:1.5rem;line-height:1;cursor:pointer}
@@ -156,6 +156,9 @@ select{width:100%;background:#0f0f10;color:var(--txt);border:1px solid var(--lin
 "use strict";
 var SRC={tpl:document.getElementById("tpl").innerHTML,sty:document.getElementById("app-style").textContent,code:document.getElementById("app-code").textContent,title:document.title};
 var DATA=JSON.parse(document.getElementById("site-data").textContent);
+var DEFAULT_BOOKING_MESSAGE="Olá, {barbeiro}! Acabei de agendar na Nova Era um horário para {servico} no dia {data} às {horario}. Meu nome é {nome} e meu contato é {telefone}. Podemos confirmar? Obrigado!";
+var DEFAULT_CANCEL_MESSAGE="Olá, {nome}! Aqui é {barbeiro}, da Nova Era Barbearia. Precisamos cancelar seu horário de {servico} no dia {data}, às {horario}. Podemos combinar outro horário?";
+function messageFor(template,b){var values={nome:b.name||"",barbeiro:b.barberName||"",servico:b.service||"",data:fmtDate(b.date||""),horario:b.time||"",telefone:b.phone||""};return String(template||"").replace(/\{(nome|barbeiro|servico|data|horario|telefone)\}/g,function(_,key){return values[key]||""})}
 try{var LS=localStorage.getItem("novaera_site");if(LS)DATA=JSON.parse(LS)}catch(e){}
 document.getElementById("mount").appendChild(document.getElementById("tpl").content.cloneNode(true));
 var BARBERS=[{id:"b1",name:"Biel",cls:"t1",wa:"5586999981178"},{id:"b2",name:"Nicolas",cls:"t2",wa:"5586999981178"}]; // wa = WhatsApp de cada barbeiro (55 + DDD + número)
@@ -304,7 +307,7 @@ $("send").onclick=async function(){
   var barberWa=(DATA.barbers[br.id]||{}).wa||br.wa||WHATSAPP;
   var waDigits=String(barberWa||"").replace(/\\D/g,"");
   if(waDigits&&waDigits.length<=11)waDigits="55"+waDigits;
-  var waMessage="Olá, "+br.name+"! Acabei de agendar na Nova Era um horário para "+sv.name+" no dia "+fmtDate(b.date)+" às "+b.time+". Meu nome é "+name+" e meu contato é "+ph+". Podemos confirmar? Obrigado!";
+  var waMessage=messageFor((DATA.barbers[br.id]||{}).bookingMessage||DEFAULT_BOOKING_MESSAGE,b);
   var waTab=waDigits?window.open("about:blank","_blank"):null;
   $("send").disabled=true;
   var saved=await saveBooking(b);
@@ -316,11 +319,11 @@ $("send").onclick=async function(){
 function showDone(b){
   $("booking").classList.add("hide");
   var d=$("done");d.classList.remove("hide");
-  var msg="Olá! Agendei na Nova Era: "+b.service+" com "+b.barberName+", "+fmtDate(b.date)+" às "+b.time+". Nome: "+b.name+", contato: "+b.phone;
+  var msg=messageFor((DATA.barbers[b.barber]||{}).bookingMessage||DEFAULT_BOOKING_MESSAGE,b);
   d.innerHTML='<div class="big">✓</div><h2 style="margin-top:6px">Horário confirmado</h2>'+
    '<p><b>'+esc(b.service)+'</b> com <b>'+esc(b.barberName)+'</b><br>'+esc(fmtDate(b.date))+' às <b>'+esc(b.time)+'</b></p>'+
    '<p class="note">Contato registrado: '+esc(b.name)+' · '+esc(b.phone)+'</p>'+
-   (WHATSAPP?'<a class="go" style="display:block;text-decoration:none;margin-top:12px" href="https://wa.me/'+((DATA.barbers[b.barber]||{}).wa||WHATSAPP)+'?text='+encodeURIComponent(msg)+'" target="_blank" rel="noopener">Enviar para '+esc(b.barberName)+' no WhatsApp</a><p class="note">Toque no botão para o barbeiro receber seu agendamento.</p>':'')+
+   (WHATSAPP?'<a class="go" style="display:block;text-decoration:none;margin-top:12px" href="https://wa.me/'+waNum((DATA.barbers[b.barber]||{}).wa||WHATSAPP)+'?text='+encodeURIComponent(msg)+'" target="_blank" rel="noopener">Enviar para '+esc(b.barberName)+' no WhatsApp</a><p class="note">Toque no botão para o barbeiro receber seu agendamento.</p>':'')+
    '<button class="ghost" style="margin-top:14px" id="again">Fazer outro agendamento</button>';
   $("again").onclick=function(){sel={barber:null,service:null,date:null,time:null};$("nm").value="";$("ph").value="";d.classList.add("hide");$("booking").classList.remove("hide");renderAll();renderServices()};
 }
@@ -370,7 +373,7 @@ function renderAdmin(){
     if(status==="cancelled"){
       if(!confirm("Cancelar este agendamento? Ele ficará no histórico e o horário será liberado."))return;
       var n=String(b.phone).replace(/\D/g,"").replace(/^0+/,"");if(n.length<=11)n="55"+n;
-      var m="Olá, "+b.name+"! Aqui é da Nova Era Barbearia. Precisamos cancelar seu horário de "+b.service+" com "+b.barberName+" ("+fmtDate(b.date)+" às "+b.time+"). Podemos combinar outro horário?";
+      var m=messageFor((DATA.barbers[b.barber]||{}).cancelMessage||DEFAULT_CANCEL_MESSAGE,b);
       window.open("https://wa.me/"+n+"?text="+encodeURIComponent(m),"_blank");
     }else if(status==="finished"&&!confirm("Marcar este atendimento como finalizado?"))return;
     else if(status==="scheduled"&&!confirm("Reabrir este agendamento como marcado? O horário voltará a ficar reservado."))return;
@@ -468,6 +471,8 @@ function renderEditor(){
     '<label>WhatsApp (com DDD)</label><input data-f="wa" data-b="'+b.id+'" inputmode="tel" value="'+attr(d.wa||"")+'">'+
     '<label>Link do Instagram</label><input data-f="ig" data-b="'+b.id+'" placeholder="https://instagram.com/..." value="'+attr(d.ig||"")+'">'+
     '<label>Apresentação curta</label><input data-f="bio" data-b="'+b.id+'" maxlength="140" value="'+attr(d.bio||"")+'">'+
+    '<label>Mensagem quando o cliente agenda (enviada para você)</label><textarea data-f="bookingMessage" data-b="'+b.id+'" maxlength="1000">'+esc(d.bookingMessage||DEFAULT_BOOKING_MESSAGE)+'</textarea>'+
+    '<label>Mensagem quando você cancela (enviada ao cliente)</label><textarea data-f="cancelMessage" data-b="'+b.id+'" maxlength="1000">'+esc(d.cancelMessage||DEFAULT_CANCEL_MESSAGE)+'</textarea>'+
     '<label>Fotos dos seus trabalhos (até 8)</label><input type="file" accept="image/*" multiple data-up="'+b.id+'">'+
     '<div class="gal">'+(d.photos||[]).map(function(u,k){return '<div class="ph"><img alt="" src="'+u+'"><button type="button" data-rm="'+b.id+':'+k+'">×</button></div>'}).join("")+'</div></div>';
   });
@@ -505,7 +510,7 @@ function buildHTML(data){
 async function saveEd(){
   $("edErr").classList.add("hide");
   var out=JSON.parse(JSON.stringify(ED));
-  BARBERS.forEach(function(b){var d=out.barbers[b.id];d.wa=waNum(d.wa);d.ig=(d.ig||"").trim();d.bio=(d.bio||"").trim()});
+  BARBERS.forEach(function(b){var d=out.barbers[b.id]=out.barbers[b.id]||{};d.wa=waNum(d.wa);d.ig=(d.ig||"").trim();d.bio=(d.bio||"").trim();d.bookingMessage=(d.bookingMessage||DEFAULT_BOOKING_MESSAGE).trim().slice(0,1000);d.cancelMessage=(d.cancelMessage||DEFAULT_CANCEL_MESSAGE).trim().slice(0,1000)});
   out.links=(out.links||[]).filter(function(l){return l&&l.l&&PUB.test((l.u||"").trim())}).map(function(l){return {l:l.l.trim(),u:l.u.trim()}});
   out.loc=(out.loc||"").trim();
   out.homeTitle=(out.homeTitle||"Seu estilo começa aqui.").trim().slice(0,100);
@@ -529,7 +534,7 @@ async function saveEd(){
       if(!(sitePh&&sitePh[id]&&sitePh[id][k]===ph[k]))jobs.push({id:id,k:k,u:ph[k]});
     }
     for(var r=ph.length;r<on;r++)jobs.push({id:id,k:r,del:1});
-    meta.barbers[id]={wa:d.wa,ig:d.ig,bio:d.bio,n:ph.length};
+    meta.barbers[id]={wa:d.wa,ig:d.ig,bio:d.bio,n:ph.length,bookingMessage:d.bookingMessage,cancelMessage:d.cancelMessage};
   }
   $("edSave").disabled=true;
   try{

@@ -62,14 +62,14 @@ export const Route = createFileRoute("/api/public/site-data")({
           if (!row.id || !/^b\d$/.test(row.barber) || !/^\d{4}-\d{2}-\d{2}$/.test(row.date) || !/^\d{2}:\d{2}$/.test(row.time)) return Response.json({ error: "bad" }, { status: 400 });
           const minute = Number(row.time.slice(3, 5));
           if (minute !== 0 && minute !== 30) return Response.json({ error: "invalid_slot" }, { status: 400 });
-          const [hours, minutes] = row.time.split(":").map(Number);
+          const [hours = 0, minutes = 0] = row.time.split(":").map(Number);
           const start = hours * 60 + minutes;
           const end = start + row.dur;
           const existing = await db.from("bookings").select("id,time,dur,data").eq("barber", row.barber).eq("date", row.date);
           if (existing.error) return Response.json({ error: "fail" }, { status: 500 });
           const clash = (existing.data || []).some((booking: any) => {
             if (["cancelled", "finished"].includes(booking.data?.status)) return false;
-            const [h, m] = String(booking.time).slice(0, 5).split(":").map(Number);
+            const [h = 0, m = 0] = String(booking.time).slice(0, 5).split(":").map(Number);
             const bookedStart = h * 60 + m;
             const bookedEnd = bookedStart + (Number(booking.dur) || 30);
             return bookedStart < end && start < bookedEnd;
@@ -96,12 +96,12 @@ export const Route = createFileRoute("/api/public/site-data")({
           if (status === "scheduled") {
             const existing = await db.from("bookings").select("id,time,dur,data").eq("barber", booking.barber).eq("date", booking.date);
             if (existing.error) return Response.json({ error: "fail" }, { status: 500 });
-            const [hours, minutes] = String(booking.time).slice(0, 5).split(":").map(Number);
+            const [hours = 0, minutes = 0] = String(booking.time).slice(0, 5).split(":").map(Number);
             const start = hours * 60 + minutes;
             const end = start + (Number(booking.dur) || 30);
             const clash = (existing.data || []).some((other: any) => {
               if (other.id === id || ["cancelled", "finished"].includes(other.data?.status)) return false;
-              const [h, m] = String(other.time).slice(0, 5).split(":").map(Number);
+              const [h = 0, m = 0] = String(other.time).slice(0, 5).split(":").map(Number);
               const otherStart = h * 60 + m;
               return otherStart < end && start < otherStart + (Number(other.dur) || 30);
             });

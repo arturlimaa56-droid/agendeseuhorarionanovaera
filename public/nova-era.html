@@ -389,7 +389,7 @@ function renderAdmin(){
     var id=x.getAttribute("data-id"),status=x.getAttribute("data-status-action"),b=all().filter(function(q){return q.id===id})[0];if(!b)return;
     if(status==="delete"){
       if(!confirm("Excluir definitivamente este registro? Esta ação não pode ser desfeita."))return;
-      await removeBooking(id);return;
+      removeBooking(id);return;
     }
     if(status==="cancelled"){
       if(!confirm("Cancelar este agendamento? Ele ficará no histórico e o horário será liberado."))return;

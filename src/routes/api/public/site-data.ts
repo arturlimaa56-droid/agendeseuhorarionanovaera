@@ -19,17 +19,17 @@ export const Route = createFileRoute("/api/public/site-data")({
     handlers: {
       GET: async ({ request }) => {
         const db = await admin();
-        // Finaliza automaticamente quando passam a duração do serviço + 60 minutos.
+        // Finaliza automaticamente quando passa o horário de término (início + duração).
         // A página consulta este endpoint periodicamente, e a atualização é feita no servidor.
         const now = Date.now();
         const pending = await db.from("bookings").select("id,date,time,dur,data").gte("date", new Date(now - 2 * 86400000).toISOString().slice(0, 10));
         if (!pending.error) {
           const due = (pending.data || []).filter((b: any) => {
             const status = b.data?.status || "scheduled";
-            if (status !== "scheduled" || !/^\\d{4}-\\d{2}-\\d{2}$/.test(String(b.date)) || !/^\\d{2}:\\d{2}/.test(String(b.time))) return false;
+            if (status !== "scheduled" || !/^\d{4}-\d{2}-\d{2}$/.test(String(b.date)) || !/^\d{2}:\d{2}/.test(String(b.time))) return false;
             const start = new Date(String(b.date) + "T" + String(b.time).slice(0, 5) + ":00-03:00").getTime();
             const duration = Math.min(240, Math.max(5, Number(b.dur) || Number(b.data?.dur) || 30));
-            return Number.isFinite(start) && now >= start + (duration + 60) * 60000;
+            return Number.isFinite(start) && now >= start + duration * 60000;
           });
           await Promise.all(due.map((b: any) =>
             db.from("bookings").update({ data: { ...(b.data || {}), status: "finished" } }).eq("id", b.id)

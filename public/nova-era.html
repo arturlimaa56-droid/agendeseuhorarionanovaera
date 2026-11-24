@@ -351,7 +351,24 @@ async function setBookingStatus(id,status){
     renderAdmin();renderSlots();
   }catch(e){alert("Não foi possível atualizar o agendamento. Confira a conexão e tente novamente.");}
 }
+var expiringBookings={};
+function bookingEnd(b){
+  var parts=String(b.date||"").split("-"),hm=String(b.time||"").split(":");
+  if(parts.length!==3||hm.length<2)return NaN;
+  var start=new Date(Number(parts[0]),Number(parts[1])-1,Number(parts[2]),Number(hm[0]),Number(hm[1])).getTime();
+  return start+Math.max(0,Number(b.dur)||0)*60000;
+}
+function finalizeExpiredBookings(){
+  var now=Date.now();
+  all().forEach(function(b){
+    if((b.status||"scheduled")==="scheduled"&&Number.isFinite(bookingEnd(b))&&bookingEnd(b)<=now&&!expiringBookings[b.id]){
+      expiringBookings[b.id]=true;
+      setBookingStatus(b.id,"finished").finally(function(){delete expiringBookings[b.id]});
+    }
+  });
+}
 function renderAdmin(){
+  finalizeExpiredBookings();
   var l=$("list"),arr=all().filter(function(b){return (!ME||!ME.b||b.barber===ME.b)&&b.name});
   arr.sort(function(a,b){return (a.date+a.time).localeCompare(b.date+b.time)});
   var labels=[["scheduled","Marcados"],["cancelled","Cancelados"],["finished","Finalizados"]];
@@ -363,13 +380,17 @@ function renderAdmin(){
     if(b.date!==last){h+='<h2 style="margin-top:14px">'+esc(fmtDate(b.date))+'</h2>';last=b.date}
     var cls=b.barber==="b2"?"t2":"t1",action="";
     if(adminFilter==="scheduled")action='<button class="x" data-status-action="cancelled" data-id="'+esc(b.id)+'">Cancelar</button><button class="ghost" data-status-action="finished" data-id="'+esc(b.id)+'">Finalizar</button>';
-    else action='<button class="ghost" data-status-action="scheduled" data-id="'+esc(b.id)+'">Reabrir como marcado</button>';
+    else action='<button class="ghost" data-status-action="scheduled" data-id="'+esc(b.id)+'">Reabrir como marcado</button><button class="x" data-status-action="delete" data-id="'+esc(b.id)+'">Excluir</button>';
     h+='<div class="row"><span class="t">'+esc(b.time)+'</span><span class="c">'+esc(b.name)+'<span class="tag '+cls+'">'+esc(b.barberName)+'</span><small>'+esc(b.service)+' · '+esc(b.phone)+'</small></span><span style="display:flex;gap:5px;flex-wrap:wrap">'+action+'</span></div>';
   });
   l.innerHTML=h;
   Array.prototype.forEach.call(l.querySelectorAll("[data-status-tab]"),function(x){x.onclick=function(){adminFilter=x.getAttribute("data-status-tab");renderAdmin()}});
   Array.prototype.forEach.call(l.querySelectorAll("[data-status-action]"),function(x){x.onclick=function(){
     var id=x.getAttribute("data-id"),status=x.getAttribute("data-status-action"),b=all().filter(function(q){return q.id===id})[0];if(!b)return;
+    if(status==="delete"){
+      if(!confirm("Excluir definitivamente este registro? Esta ação não pode ser desfeita."))return;
+      await removeBooking(id);return;
+    }
     if(status==="cancelled"){
       if(!confirm("Cancelar este agendamento? Ele ficará no histórico e o horário será liberado."))return;
       var n=String(b.phone).replace(/\D/g,"").replace(/^0+/,"");if(n.length<=11)n="55"+n;
